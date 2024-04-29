@@ -52,7 +52,7 @@ evaluation = model.evaluate(X_test, y_test)
 print(f"Test loss: {evaluation[0]}")
 print(f"Test R-squared: {evaluation[1]}")
 
-model = load_model('./model.h5', custom_objects={'r_squared': r_squared})
+model = load_model('./model.keras', custom_objects={'r_squared': r_squared})
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 tflite_model = converter.convert()
 

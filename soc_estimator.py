@@ -3,9 +3,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import keras
 from tensorflow.keras import backend as K
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential, load_model
 
 def r_squared(y_true, y_pred):
     res = K.sum(K.square(y_true - y_pred))
@@ -13,7 +14,6 @@ def r_squared(y_true, y_pred):
     return (1 - res/(tot + K.epsilon()))
 
 data = pd.read_csv('./data/dataset.csv')
-
 
 data['Tegangan Baterai'] = data['Tegangan Baterai']
 data['Arus Beban'] = data['Arus Beban']
@@ -46,10 +46,20 @@ model = Sequential([
 
 model.compile(optimizer='adam', loss='mean_squared_error', metrics=[r_squared])
 history = model.fit(X_train, y_train, epochs=100, validation_split=0.2, batch_size=64)
+
 evaluation = model.evaluate(X_test, y_test)
 
 print(f"Test loss: {evaluation[0]}")
 print(f"Test R-squared: {evaluation[1]}")
+
+model = load_model('./model.h5', custom_objects={'r_squared': r_squared})
+converter = tf.lite.TFLiteConverter.from_keras_model(model)
+tflite_model = converter.convert()
+
+with open('model.tflite', 'wb') as f:
+    f.write(tflite_model)
+
+print("Model has been converted to TensorFlow Lite format.")
 
 def prepare_data(df):
     df['Tegangan Baterai'] = df['Tegangan Baterai'].str.replace(',', '.').astype(float)
